@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/light_bg"
+    tools:context=".ui.activities.RegisterActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Hero Section (Mobile Header) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/hero_gradient_background"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_5xl">
+
+            <!-- Logo -->
+            <ImageView
+                android:id="@+id/logoImage"
+                android:layout_width="350dp"
+                android:layout_height="120dp"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                android:contentDescription="Heal Lots Logo"
+                android:scaleType="centerInside"
+                android:src="@drawable/logo" />
+
+            <!-- Hero Headline -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                android:gravity="center"
+                android:text="Join Heal Lots"
+                android:textAppearance="@style/TextAppearance.HealLots.Heading3"
+                android:textColor="@color/text_white" />
+
+            <!-- Hero Tagline -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_3xl"
+                android:gravity="center"
+                android:lineSpacingMultiplier="1.75"
+                android:text="Create your account to book sessions\nwith trusted local hilot specialists."
+                android:textAppearance="@style/TextAppearance.HealLots.BodyMedium"
+                android:textColor="@color/text_tertiary" />
+
+            <!-- Features List -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="start"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/spacing_md"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/spacing_md"
+                        android:text="📅"
+                        android:textSize="@dimen/text_lg" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Easy appointment booking"
+                        android:textAppearance="@style/TextAppearance.HealLots.BodySmall"
+                        android:textColor="@color/text_tertiary" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/spacing_md"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/spacing_md"
+                        android:text="🤲"
+                        android:textSize="@dimen/text_lg" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Expert hilot practitioners"
+                        android:textAppearance="@style/TextAppearance.HealLots.BodySmall"
+                        android:textColor="@color/text_tertiary" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/spacing_md"
+                        android:text="🌿"
+                        android:textSize="@dimen/text_lg" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Traditional Filipino methods"
+                        android:textAppearance="@style/TextAppearance.HealLots.BodySmall"
+                        android:textColor="@color/text_tertiary" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Form Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_lg"
+            android:background="@color/light_bg">
+
+            <!-- Form Header -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Create your account"
+                android:textAppearance="@style/TextAppearance.HealLots.Heading4"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="@dimen/spacing_sm" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Join Heal Lots to book sessions with trusted specialists"
+                android:textAppearance="@style/TextAppearance.HealLots.BodySmall"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="@dimen/spacing_lg" />
+
+            <!-- Error Banner -->
+            <FrameLayout
+                android:id="@+id/errorBanner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:background="@color/error_bg"
+                android:padding="@dimen/spacing_md"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⚠️"
+                        android:textSize="@dimen/text_md"
+                        android:layout_marginEnd="@dimen/spacing_md" />
+
+                    <TextView
+                        android:id="@+id/errorMessage"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textAppearance="@style/TextAppearance.HealLots.BodySmall"
+                        android:textColor="@color/error_red"
+                        android:text="An error occurred." />
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- Full Name Field -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Full Name"
+                android:textAppearance="@style/TextAppearance.HealLots.Label"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="@dimen/spacing_sm"
+                android:letterSpacing="0.01" />
+
+            <EditText
+                android:id="@+id/nameEditText"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/input_height"
+                android:hint="e.g.: Pedro dela Cruz"
+                android:inputType="text"
+                android:padding="@dimen/input_padding"
+                android:background="@drawable/edit_text_background"
+                android:textAppearance="@style/TextAppearance.HealLots.BodyMedium"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:layout_marginBottom="@dimen/spacing_lg" />
+
+            <!-- Email Field -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Email address"
+                android:textAppearance="@style/TextAppearance.HealLots.Label"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="@dimen/spacing_sm"
+                android:letterSpacing="0.01" />
+
+            <EditText
+                android:id="@+id/emailEditText"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/input_height"
+                android:hint="e.g.: heallots@gmail.com"
+                android:inputType="textEmailAddress"
+                android:padding="@dimen/input_padding"
+                android:background="@drawable/edit_text_background"
+                android:textAppearance="@style/TextAppearance.HealLots.BodyMedium"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:layout_marginBottom="@dimen/spacing_lg" />
+
+            <!-- Phone Field -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Phone number"
+                android:textAppearance="@style/TextAppearance.HealLots.Label"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="@dimen/spacing_sm"
+                android:letterSpacing="0.01" />
+
+            <EditText
+                android:id="@+id/phoneEditText"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/input_height"
+                android:hint="0917 123 4567"
+                android:inputType="phone"
+                android:padding="@dimen/input_padding"
+                android:background="@drawable/edit_text_background"
+                android:textAppearance="@style/TextAppearance.HealLots.BodyMedium"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:layout_marginBottom="@dimen/spacing_lg" />
+
+            <!-- Birthday & Gender Fields (2-column row) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginEnd="@dimen/spacing_md">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Birthday"
+                        android:textAppearance="@style/TextAppearance.HealLots.Label"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="@dimen/spacing_sm"
+                        android:letterSpacing="0.01" />
+
+                    <EditText
+                        android:id="@+id/birthdayEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/input_height"
+                        android:hint="Month DD, YYYY"
+                        android:inputType="text"
+                        android:maxLength="20"
+                        android:padding="@dimen/input_padding"
+                        android:background="@drawable/edit_text_background"
+                        android:textAppearance="@style/TextAppearance.HealLots.BodyMedium"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_secondary"
+                        android:focusable="true"
+                        android:focusableInTouchMode="false" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Gender"
+                        android:textAppearance="@style/TextAppearance.HealLots.Label"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="@dimen/spacing_sm"
+                        android:letterSpacing="0.01" />
+
+                    <Spinner
+                        android:id="@+id/genderSpinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/input_height"
+                        android:background="@drawable/edit_text_background"
+                        android:padding="@dimen/input_padding" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Address Field -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Address"
+                android:textAppearance="@style/TextAppearance.HealLots.Label"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="@dimen/spacing_sm"
+                android:letterSpacing="0.01" />
+
+            <EditText
+                android:id="@+id/addressEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Street, Barangay, City, Province"
+                android:inputType="textMultiLine"
+                android:lines="3"
+                android:padding="@dimen/input_padding"
+                android:background="@drawable/edit_text_background"
+                android:textAppearance="@style/TextAppearance.HealLots.BodyMedium"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                android:gravity="top" />
+
+            <!-- Password Field -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Password"
+                android:textAppearance="@style/TextAppearance.HealLots.Label"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="@dimen/spacing_sm"
+                android:letterSpacing="0.01" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/input_height"
+                android:background="@drawable/edit_text_background"
+                android:layout_marginBottom="@dimen/spacing_sm">
+
+                <EditText
+                    android:id="@+id/passwordEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:hint="Password"
+                    android:inputType="textPassword"
+                    android:padding="@dimen/input_padding"
+                    android:background="@android:color/transparent"
+                    android:textAppearance="@style/TextAppearance.HealLots.BodyMedium"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary" />
+
+                <ImageButton
+                    android:id="@+id/passwordToggleButton"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:contentDescription="Toggle password visibility"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_menu_view"
+                    android:layout_gravity="end"
+                    android:scaleType="centerInside" />
+            </FrameLayout>
+
+            <!-- Password Strength Indicator -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <View
+                        android:id="@+id/passwordStrengthBar"
+                        android:layout_width="0dp"
+                        android:layout_height="4dp"
+                        android:background="@color/strength_too_short"
+                        android:layout_marginBottom="@dimen/spacing_sm" />
+
+                    <TextView
+                        android:id="@+id/passwordStrengthText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Too short"
+                        android:textAppearance="@style/TextAppearance.HealLots.BodySmall"
+                        android:textColor="@color/strength_too_short" />
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- Confirm Password Field -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Confirm password"
+                android:textAppearance="@style/TextAppearance.HealLots.Label"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="@dimen/spacing_sm"
+                android:letterSpacing="0.01" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/input_height"
+                android:background="@drawable/edit_text_background"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <EditText
+                    android:id="@+id/confirmPasswordEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:hint="Confirm password"
+                    android:inputType="textPassword"
+                    android:padding="@dimen/input_padding"
+                    android:background="@android:color/transparent"
+                    android:textAppearance="@style/TextAppearance.HealLots.BodyMedium"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary" />
+
+                <ImageButton
+                    android:id="@+id/confirmPasswordToggleButton"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:contentDescription="Toggle password visibility"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_menu_view"
+                    android:layout_gravity="end"
+                    android:scaleType="centerInside" />
+            </FrameLayout>
+
+            <!-- Register Button -->
+            <Button
+                android:id="@+id/registerButton"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/button_height"
+                android:text="Create Account"
+                android:textAppearance="@style/TextAppearance.HealLots.Label"
+                android:textColor="@color/text_white"
+                android:background="@drawable/button_background"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                android:elevation="@dimen/card_elevation_high" />
+
+            <!-- Login Link -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Already have an account? "
+                    android:textAppearance="@style/TextAppearance.HealLots.BodySmall"
+                    android:textColor="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/loginLink"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sign in"
+                    android:textAppearance="@style/TextAppearance.HealLots.Label"
+                    android:textColor="@color/primary_orange"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground" />
+            </LinearLayout>
+
+            <!-- Bottom Spacing -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/spacing_lg" />
+        </LinearLayout>
+    </LinearLayout>
+
+</ScrollView>

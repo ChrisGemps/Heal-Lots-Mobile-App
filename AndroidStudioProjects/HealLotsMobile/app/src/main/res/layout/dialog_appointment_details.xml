@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/appointment_modal_background"
+        android:orientation="vertical"
+        android:padding="22dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="serif"
+            android:text="Appointment Details"
+            android:textColor="@color/text_primary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:columnCount="2">
+
+            <TextView android:text="SERVICE" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+            <TextView android:id="@+id/detailServiceValue" android:paddingBottom="12dp" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+            <TextView android:text="SPECIALIST" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+            <TextView android:id="@+id/detailSpecialistValue" android:paddingBottom="12dp" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+            <TextView android:text="DATE" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+            <TextView android:id="@+id/detailDateValue" android:paddingBottom="12dp" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+            <TextView android:text="TIME" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+            <TextView android:id="@+id/detailTimeValue" android:paddingBottom="12dp" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+            <TextView android:text="STATUS" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+            <TextView android:id="@+id/detailStatusValue" android:paddingBottom="12dp" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+            <TextView android:text="PATIENT NAME" android:textColor="@color/text_secondary" android:textSize="11sp" android:textStyle="bold" />
+            <TextView android:id="@+id/detailPatientValue" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+
+        </GridLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="REASON"
+            android:textColor="@color/text_secondary"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/detailReasonValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/appointment_reason_background"
+            android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:id="@+id/detailRescheduleBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/appointment_blue_notice_background"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Reschedule Reason"
+                android:textColor="@color/status_info_text"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/detailRescheduleReason"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/status_info_text"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/detailCancellationBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/appointment_red_notice_background"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cancellation Reason"
+                android:textColor="@color/status_error_text"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/detailCancellationReason"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/status_error_text"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:orientation="horizontal">
+
+            <Button android:id="@+id/detailActionBtn1" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:text="Action" android:textStyle="bold" />
+            <Space android:layout_width="8dp" android:layout_height="wrap_content" />
+            <Button android:id="@+id/detailActionBtn2" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:text="Action" android:textStyle="bold" />
+            <Space android:id="@+id/detailActionSpacer2" android:layout_width="8dp" android:layout_height="wrap_content" />
+            <Button android:id="@+id/detailActionBtn3" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:text="Action" android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/detailCloseBtn"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="10dp"
+            android:text="Close"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</ScrollView>

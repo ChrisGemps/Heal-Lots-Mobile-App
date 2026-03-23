@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Heal Lots Mobile</string>
+    <string-array name="book_reason_options">
+        <item>Select a reason...</item>
+        <item>Body Pain / Muscle Aches</item>
+        <item>Stress &amp; Fatigue Relief</item>
+        <item>Post-injury Recovery</item>
+        <item>Regular Wellness Session</item>
+        <item>Sleep Improvement</item>
+        <item>Headache / Migraine</item>
+        <item>Other</item>
+    </string-array>
+</resources>

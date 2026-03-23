@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Brand Colors -->
+    <color name="primary_orange">#d97706</color>
+    <color name="primary_orange_hover">#f59e0b</color>
+    <color name="primary_orange_dark">#ea580c</color>
+    <color name="primary_purple">#6366a6</color>
+    <color name="primary_purple_dark">#4f52a8</color>
+    
+    <!-- Dark Backgrounds (Gradient) -->
+    <color name="dark_bg_1">#0f172a</color>
+    <color name="dark_bg_2">#1c1408</color>
+    <color name="dark_bg_3">#2d1a04</color>
+    
+    <!-- Light Backgrounds -->
+    <color name="light_bg">#fafaf8</color>
+    <color name="light_bg_white">#ffffff</color>
+    
+    <!-- Text Colors -->
+    <color name="text_primary">#1c1408</color>
+    <color name="text_secondary">#78716c</color>
+    <color name="text_secondary_light">#78716c</color>
+    <color name="text_tertiary">#a8956b</color>
+    <color name="text_white">#ffffff</color>
+    <color name="text_light">#e2c98a</color>
+    <color name="secondary_accent">#fbbf24</color>
+    
+    <!-- Borders & Dividers -->
+    <color name="border_light">#e8ddd0</color>
+    <color name="border_lighter">#f0e6d3</color>
+    
+    <!-- Status Colors -->
+    <color name="status_pending_bg">#fef3c7</color>
+    <color name="status_pending_text">#b45309</color>
+    <color name="status_pending_dot">#d97706</color>
+    
+    <color name="status_success_bg">#dcfce7</color>
+    <color name="status_success_text">#15803d</color>
+    <color name="status_success_dot">#22c55e</color>
+    
+    <color name="status_error_bg">#fee2e2</color>
+    <color name="status_error_text">#dc2626</color>
+    <color name="status_error_dot">#ef4444</color>
+    
+    <color name="status_info_bg">#e0e7ff</color>
+    <color name="status_info_text">#4f46e5</color>
+    <color name="status_info_dot">#6366f1</color>
+    
+    <!-- Error & Validation -->
+    <color name="error_red">#dc2626</color>
+    <color name="error_bg">#fef2f2</color>
+    <color name="error_border">#fecaca</color>
+    
+    <!-- Success -->
+    <color name="success_green">#22c55e</color>
+    
+    <!-- Warning -->
+    <color name="warning_orange">#f97316</color>
+    
+    <!-- Password Strength -->
+    <color name="strength_too_short">#ef4444</color>
+    <color name="strength_weak">#f97316</color>
+    <color name="strength_fair">#eab308</color>
+    <color name="strength_strong">#22c55e</color>
+    
+    <!-- Service Card Colors -->
+    <color name="service_hilot_bg">#fef3c7</color>
+    <color name="service_hilot_accent">#d97706</color>
+    
+    <color name="service_herbal_bg">#dcfce7</color>
+    <color name="service_herbal_accent">#16a34a</color>
+    
+    <color name="service_headneck_bg">#ede9fe</color>
+    <color name="service_headneck_accent">#7c3aed</color>
+    
+    <color name="service_foot_bg">#fce7f3</color>
+    <color name="service_foot_accent">#db2777</color>
+    
+    <color name="service_oil_bg">#ffedd5</color>
+    <color name="service_oil_accent">#ea580c</color>
+    
+    <color name="service_body_bg">#e0f2fe</color>
+    <color name="service_body_accent">#0284c7</color>
+    
+    <!-- Action Card Backgrounds -->
+    <color name="action_bg_yellow">#fef3c7</color>
+    <color name="action_bg_green">#dcfce7</color>
+    
+    <!-- Legacy -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

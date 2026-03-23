@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spacing -->
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">12dp</dimen>
+    <dimen name="spacing_lg">16dp</dimen>
+    <dimen name="spacing_xl">20dp</dimen>
+    <dimen name="spacing_xxl">24dp</dimen>
+    <dimen name="spacing_3xl">32dp</dimen>
+    <dimen name="spacing_4xl">40dp</dimen>
+    <dimen name="spacing_5xl">48dp</dimen>
+    <dimen name="spacing_6xl">60dp</dimen>
+    
+    <!-- Border Radius -->
+    <dimen name="corner_xs">4dp</dimen>
+    <dimen name="corner_sm">8dp</dimen>
+    <dimen name="corner_md">10dp</dimen>
+    <dimen name="corner_lg">12dp</dimen>
+    <dimen name="corner_xl">16dp</dimen>
+    <dimen name="corner_full">100dp</dimen>
+    
+    <!-- Text Sizes -->
+    <dimen name="text_xs">11sp</dimen>
+    <dimen name="text_sm">13sp</dimen>
+    <dimen name="text_base">14sp</dimen>
+    <dimen name="text_md">15sp</dimen>
+    <dimen name="text_lg">16sp</dimen>
+    <dimen name="text_xl">18sp</dimen>
+    <dimen name="text_2xl">20sp</dimen>
+    <dimen name="text_3xl">24sp</dimen>
+    <dimen name="text_4xl">28sp</dimen>
+    <dimen name="text_5xl">32sp</dimen>
+    <dimen name="text_6xl">36sp</dimen>
+    <dimen name="text_7xl">44sp</dimen>
+    <dimen name="text_8xl">72sp</dimen>
+    
+    <!-- Component Sizes -->
+    <dimen name="button_height_small">44dp</dimen>
+    <dimen name="button_height">48dp</dimen>
+    <dimen name="button_height_large">56dp</dimen>
+    
+    <dimen name="input_height">48dp</dimen>
+    <dimen name="input_padding">12dp</dimen>
+    
+    <dimen name="icon_small">20dp</dimen>
+    <dimen name="icon_md">24dp</dimen>
+    <dimen name="icon_lg">32dp</dimen>
+    <dimen name="icon_xl">48dp</dimen>
+    <dimen name="icon_2xl">64dp</dimen>
+    
+    <!-- Profile Photo -->
+    <dimen name="profile_photo_small">32dp</dimen>
+    <dimen name="profile_photo_md">48dp</dimen>
+    <dimen name="profile_photo_lg">128dp</dimen>
+    
+    <!-- Tab Height -->
+    <dimen name="tab_height">48dp</dimen>
+    
+    <!-- Card Elevation -->
+    <dimen name="card_elevation">2dp</dimen>
+    <dimen name="card_elevation_high">8dp</dimen>
+    
+    <!-- Max Width for dialogs/modals -->
+    <dimen name="dialog_max_width">420dp</dimen>
+    <dimen name="form_max_width">420dp</dimen>
+    
+    <!-- Stroke Width -->
+    <dimen name="stroke_thin">1dp</dimen>
+    <dimen name="stroke_medium">1.5dp</dimen>
+    <dimen name="stroke_thick">2dp</dimen>
+    
+    <!-- Line Height (text) -->
+    <dimen name="line_height_tight">1.1</dimen>
+    <dimen name="line_height_md">1.5</dimen>
+    <dimen name="line_height_relaxed">1.75</dimen>
+    
+    <!-- Letter Spacing -->
+    <dimen name="letter_spacing_tight">-0.5sp</dimen>
+    <dimen name="letter_spacing_normal">0sp</dimen>
+    <dimen name="letter_spacing_wide">0.5sp</dimen>
+</resources>

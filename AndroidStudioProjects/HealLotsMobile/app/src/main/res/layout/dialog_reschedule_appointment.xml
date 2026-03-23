@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/appointment_modal_background"
+        android:orientation="vertical"
+        android:padding="22dp">
+
+        <TextView
+            android:id="@+id/rescheduleDialogTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="serif"
+            android:text="Reschedule Appointment"
+            android:textColor="@color/text_primary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/rescheduleReasonInput"
+            android:layout_width="match_parent"
+            android:layout_height="92dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/edit_text_background"
+            android:gravity="top"
+            android:hint="Reason for rescheduling"
+            android:inputType="textMultiLine|textCapSentences"
+            android:padding="12dp" />
+
+        <TextView
+            android:id="@+id/rescheduleReasonCounter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="6dp"
+            android:text="0/200"
+            android:textColor="@color/text_secondary"
+            android:textSize="11sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <Button android:id="@+id/reschedulePrevMonthBtn" android:layout_width="34dp" android:layout_height="34dp" android:text="←" />
+                    <TextView android:id="@+id/rescheduleMonthTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="March 2026" android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
+                    <Button android:id="@+id/rescheduleNextMonthBtn" android:layout_width="34dp" android:layout_height="34dp" android:text="→" />
+
+                </LinearLayout>
+
+                <GridLayout
+                    android:id="@+id/rescheduleCalendarHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:columnCount="7" />
+
+                <GridLayout
+                    android:id="@+id/rescheduleCalendarGrid"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:columnCount="7" />
+
+            </LinearLayout>
+
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="18dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Morning" android:textColor="@color/text_secondary" android:textSize="12sp" android:textStyle="bold" />
+                    <androidx.recyclerview.widget.RecyclerView android:id="@+id/rescheduleMorningSlots" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:nestedScrollingEnabled="false" />
+
+                </LinearLayout>
+
+                <Space android:layout_width="12dp" android:layout_height="wrap_content" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Afternoon" android:textColor="@color/text_secondary" android:textSize="12sp" android:textStyle="bold" />
+                    <androidx.recyclerview.widget.RecyclerView android:id="@+id/rescheduleAfternoonSlots" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:nestedScrollingEnabled="false" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:orientation="horizontal">
+
+            <Button android:id="@+id/rescheduleConfirmBtn" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:text="✓ Confirm Reschedule" android:textStyle="bold" />
+            <Space android:layout_width="8dp" android:layout_height="wrap_content" />
+            <Button android:id="@+id/rescheduleCancelBtn" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:text="Cancel" android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>
