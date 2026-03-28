@@ -1,0 +1,10 @@
+# Ignore everything by default
+*
+
+# Keep this ignore file itself
+!/.gitignore
+
+# Allow only the path to this project
+!/AndroidStudioProjects/
+!/AndroidStudioProjects/HealLotsMobile/
+!/AndroidStudioProjects/HealLotsMobile/**
