@@ -136,10 +136,10 @@ public class DashboardActivity extends AppCompatActivity {
         User currentUser = tokenManager.getUser();
         String fullName = currentUser != null ? safeText(currentUser.getFullName(), "User") : "User";
         String role = currentUser != null ? safeText(currentUser.getRole(), "USER") : "USER";
-        String firstName = fullName.contains(" ") ? fullName.substring(0, fullName.indexOf(' ')) : fullName;
+        String firstName = getFirstName(fullName);
 
         greetingText.setText("Welcome back, " + firstName);
-        userNameText.setText(fullName);
+        userNameText.setText(firstName);
         userRoleText.setText("ADMIN".equalsIgnoreCase(role) ? "Admin" : "Patient");
         avatarText.setText(fullName.substring(0, 1).toUpperCase(Locale.US));
         adminBtn.setVisibility("ADMIN".equalsIgnoreCase(role) ? View.VISIBLE : View.GONE);
@@ -334,6 +334,12 @@ public class DashboardActivity extends AppCompatActivity {
 
     private String safeText(String value, String fallback) {
         return value == null || value.trim().isEmpty() ? fallback : value;
+    }
+
+    private String getFirstName(String fullName) {
+        String value = safeText(fullName, "User").trim();
+        int firstSpace = value.indexOf(' ');
+        return firstSpace > 0 ? value.substring(0, firstSpace) : value;
     }
 
     private long getReviewTimestamp(Review review) {

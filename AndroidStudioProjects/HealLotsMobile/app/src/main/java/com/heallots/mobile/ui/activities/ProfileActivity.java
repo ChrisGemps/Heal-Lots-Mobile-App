@@ -11,6 +11,7 @@ import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.View;
+import android.view.Gravity;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,6 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -73,6 +75,7 @@ public class ProfileActivity extends AppCompatActivity {
     private TextView photoInitial;
     private Button changePhotoBtn;
     private TextView photoError;
+    private TextView profileNameDisplay;
     private TextView fullNameView;
     private TextView emailView;
     private TextView phoneView;
@@ -143,6 +146,7 @@ public class ProfileActivity extends AppCompatActivity {
         photoInitial = findViewById(R.id.profilePhotoInitial);
         changePhotoBtn = findViewById(R.id.profileChangePhotoBtn);
         photoError = findViewById(R.id.profilePhotoError);
+        profileNameDisplay = findViewById(R.id.profileNameDisplay);
         fullNameView = findViewById(R.id.profileFullNameView);
         emailView = findViewById(R.id.profileEmailView);
         phoneView = findViewById(R.id.profilePhoneView);
@@ -193,6 +197,7 @@ public class ProfileActivity extends AppCompatActivity {
         }
 
         String fullName = safeText(currentUser.getFullName(), "User");
+        profileNameDisplay.setText(fullName);
         fullNameView.setText(fullName);
         emailView.setText(safeText(currentUser.getEmail(), ""));
         phoneView.setText(formatPhoneForDisplay(currentUser.getPhone()));
@@ -676,15 +681,23 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void showSuccess(String message) {
-        successMessage.setText(message);
-        successBanner.setVisibility(View.VISIBLE);
-        successBanner.postDelayed(() -> successBanner.setVisibility(View.GONE), 3000);
+        showPopupMessage(message);
     }
 
     private void showError(String message) {
-        errorMessage.setText(message);
-        errorBanner.setVisibility(View.VISIBLE);
-        errorBanner.postDelayed(() -> errorBanner.setVisibility(View.GONE), 3000);
+        showPopupMessage(message);
+    }
+
+    private void showPopupMessage(String message) {
+        if (successBanner != null) {
+            successBanner.setVisibility(View.GONE);
+        }
+        if (errorBanner != null) {
+            errorBanner.setVisibility(View.GONE);
+        }
+        Toast toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        toast.show();
     }
 
     private abstract static class SimpleTextWatcher implements TextWatcher {

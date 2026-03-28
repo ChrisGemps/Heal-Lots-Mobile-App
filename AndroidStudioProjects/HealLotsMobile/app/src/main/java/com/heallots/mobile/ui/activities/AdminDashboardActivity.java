@@ -135,7 +135,7 @@ public class AdminDashboardActivity extends AppCompatActivity implements AdminAp
     private void displayUserInfo() {
         User currentUser = tokenManager.getUser();
         String fullName = currentUser != null ? safeText(currentUser.getFullName(), "Admin") : "Admin";
-        userNameText.setText(fullName);
+        userNameText.setText(getFirstName(fullName));
         userAvatarText.setText(fullName.substring(0, 1).toUpperCase(Locale.US));
 
         String profilePicture = currentUser != null ? currentUser.getProfilePictureUrl() : null;
@@ -339,6 +339,12 @@ public class AdminDashboardActivity extends AppCompatActivity implements AdminAp
 
     private String safeText(String value, String fallback) {
         return value == null || value.trim().isEmpty() ? fallback : value;
+    }
+
+    private String getFirstName(String fullName) {
+        String value = safeText(fullName, "Admin").trim();
+        int firstSpace = value.indexOf(' ');
+        return firstSpace > 0 ? value.substring(0, firstSpace) : value;
     }
 
     private void styleTabButton(Button button, boolean active) {
