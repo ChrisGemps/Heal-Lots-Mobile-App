@@ -1,4 +1,4 @@
-package com.heallots.mobile.ui.activities
+package com.heallots.mobile.features.appointments.book
 
 import android.app.DatePickerDialog
 import android.content.Intent
@@ -23,21 +23,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.heallots.mobile.R
 import com.heallots.mobile.api.ApiClient
-import com.heallots.mobile.api.ApiService
 import com.heallots.mobile.models.Appointment
 import com.heallots.mobile.models.BookAppointmentRequest
+import com.heallots.mobile.features.appointments.list.MyAppointmentsActivity
 import com.heallots.mobile.storage.TokenManager
-import com.heallots.mobile.ui.adapters.SpecialistAdapter
+import com.heallots.mobile.features.appointments.book.SpecialistAdapter
 import com.heallots.mobile.utils.MockData
 import java.util.Calendar
 import java.util.Locale
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
-class BookAppointmentActivity : AppCompatActivity() {
-    private lateinit var tokenManager: TokenManager
-    private lateinit var apiService: ApiService
+class BookAppointmentActivity : AppCompatActivity(), BookAppointmentContract.View {
+    private lateinit var presenter: BookAppointmentContract.Presenter
 
     private var backBtn: Button? = null
     private var stepIndicator: TextView? = null
@@ -74,8 +70,13 @@ class BookAppointmentActivity : AppCompatActivity() {
         try {
             setContentView(R.layout.activity_book_appointment)
             Log.d(TAG, "BookAppointmentActivity onCreate")
-            tokenManager = TokenManager(this)
-            apiService = ApiClient.getApiService()
+            presenter = BookAppointmentPresenter(
+                view = this,
+                repository = BookAppointmentRepository(
+                    apiService = ApiClient.getApiService(),
+                    tokenManager = TokenManager(this)
+                )
+            )
 
             initializeViews()
             setupListeners()
@@ -86,6 +87,11 @@ class BookAppointmentActivity : AppCompatActivity() {
             Log.e(TAG, "Error in onCreate: ${e.message}", e)
             finish()
         }
+    }
+
+    override fun onDestroy() {
+        presenter.onDestroy()
+        super.onDestroy()
     }
 
     private fun initializeViews() {
@@ -268,13 +274,8 @@ class BookAppointmentActivity : AppCompatActivity() {
             return
         }
 
-        val authHeader = tokenManager.getAuthorizationHeader()
-        if (authHeader == null) {
-            showToast("Please sign in again before booking")
-            return
-        }
-
-        val request = BookAppointmentRequest(
+        presenter.bookAppointment(
+            BookAppointmentRequest(
             service.name,
             service.specialist,
             date,
@@ -282,30 +283,7 @@ class BookAppointmentActivity : AppCompatActivity() {
             reason,
             notes
         )
-
-        step3ConfirmBtn?.isEnabled = false
-        step3ConfirmBtn?.text = "Booking..."
-        apiService.bookAppointment(authHeader, request).enqueue(object : Callback<Appointment> {
-            override fun onResponse(call: Call<Appointment>, response: Response<Appointment>) {
-                step3ConfirmBtn?.isEnabled = true
-                step3ConfirmBtn?.text = "Confirm Booking"
-                if (!response.isSuccessful || response.body() == null) {
-                    showToast("Unable to book appointment right now")
-                    return
-                }
-
-                showToast("Appointment booked successfully!")
-                startActivity(Intent(this@BookAppointmentActivity, MyAppointmentsActivity::class.java))
-                finish()
-            }
-
-            override fun onFailure(call: Call<Appointment>, t: Throwable) {
-                Log.e(TAG, "Failed to book appointment", t)
-                step3ConfirmBtn?.isEnabled = true
-                step3ConfirmBtn?.text = "Confirm Booking"
-                showToast("Unable to connect to the booking service")
-            }
-        })
+        )
     }
 
     private fun showToast(message: String) {
@@ -313,6 +291,25 @@ class BookAppointmentActivity : AppCompatActivity() {
             setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 220)
             show()
         }
+    }
+
+    override fun showBookingLoading() {
+        step3ConfirmBtn?.isEnabled = false
+        step3ConfirmBtn?.text = "Booking..."
+    }
+
+    override fun hideBookingLoading() {
+        step3ConfirmBtn?.isEnabled = true
+        step3ConfirmBtn?.text = "Confirm Booking"
+    }
+
+    override fun showMessage(message: String) {
+        showToast(message)
+    }
+
+    override fun navigateToAppointments() {
+        startActivity(Intent(this, MyAppointmentsActivity::class.java))
+        finish()
     }
 
     class TimeSlotAdapter(

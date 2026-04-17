@@ -1,4 +1,4 @@
-package com.heallots.mobile.ui.activities
+package com.heallots.mobile.features.appointments.list
 
 import android.app.AlertDialog
 import android.content.Intent
@@ -27,22 +27,15 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.heallots.mobile.R
 import com.heallots.mobile.api.ApiClient
-import com.heallots.mobile.api.ApiService
 import com.heallots.mobile.models.Appointment
-import com.heallots.mobile.models.Review
-import com.heallots.mobile.storage.TokenManager
-import com.heallots.mobile.ui.adapters.AppointmentAdapter
+import com.heallots.mobile.features.appointments.book.BookAppointmentActivity
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.ArrayList
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
-import retrofit2.Call
-import retrofit2.Callback as RetrofitCallback
-import retrofit2.Response
 
-class MyAppointmentsActivity : AppCompatActivity(), AppointmentAdapter.OnAppointmentActionListener {
+class MyAppointmentsActivity : AppCompatActivity(), AppointmentAdapter.OnAppointmentActionListener, MyAppointmentsContract.View {
     private lateinit var backBtn: Button
     private lateinit var emptyActionBtn: Button
     private lateinit var upcomingTab: LinearLayout
@@ -66,27 +59,28 @@ class MyAppointmentsActivity : AppCompatActivity(), AppointmentAdapter.OnAppoint
     private lateinit var notificationMessage: TextView
     private lateinit var notificationClose: TextView
     private lateinit var appointmentAdapter: AppointmentAdapter
-    private lateinit var tokenManager: TokenManager
-    private lateinit var apiService: ApiService
+    private lateinit var presenter: MyAppointmentsContract.Presenter
     private var currentTab = "upcoming"
     private var allAppointments = ArrayList<Appointment>()
     private var upcomingAppointments = ArrayList<Appointment>()
     private var pastAppointments = ArrayList<Appointment>()
     private var cancelledAppointments = ArrayList<Appointment>()
-    private var patientName = "Patient"
-    private var patientEmail = ""
     private var notificationDismissRunnable: Runnable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {
             setContentView(R.layout.activity_my_appointments)
-            tokenManager = TokenManager(this)
-            apiService = ApiClient.getApiService()
+            presenter = MyAppointmentsPresenter(
+                view = this,
+                repository = MyAppointmentsRepository(
+                    apiService = ApiClient.getApiService(),
+                    tokenManager = com.heallots.mobile.storage.TokenManager(this)
+                )
+            )
             initializeViews()
             setupRecyclerView()
-            loadPatientName()
-            loadAppointments()
+            presenter.loadAppointments()
             setupListeners()
             selectTab("upcoming")
         } catch (e: Exception) {
@@ -97,7 +91,12 @@ class MyAppointmentsActivity : AppCompatActivity(), AppointmentAdapter.OnAppoint
 
     override fun onResume() {
         super.onResume()
-        if (::tokenManager.isInitialized && ::apiService.isInitialized) loadAppointments()
+        if (::presenter.isInitialized) presenter.loadAppointments()
+    }
+
+    override fun onDestroy() {
+        presenter.onDestroy()
+        super.onDestroy()
     }
 
     private fun initializeViews() {
@@ -129,45 +128,6 @@ class MyAppointmentsActivity : AppCompatActivity(), AppointmentAdapter.OnAppoint
         appointmentsRecyclerView.layoutManager = LinearLayoutManager(this)
         appointmentAdapter = AppointmentAdapter(this, ArrayList(), currentTab, this)
         appointmentsRecyclerView.adapter = appointmentAdapter
-    }
-
-    private fun loadPatientName() {
-        val currentUser = tokenManager.getUser()
-        if (currentUser != null) {
-            patientName = safe(currentUser.fullName, patientName)
-            patientEmail = safe(currentUser.email)
-            return
-        }
-        val prefs = getSharedPreferences("user_prefs", MODE_PRIVATE)
-        patientName = prefs.getString("fullName", "Patient") ?: "Patient"
-        patientEmail = prefs.getString("email", "") ?: ""
-    }
-
-    private fun loadAppointments() {
-        val authHeader = tokenManager.getAuthorizationHeader()
-        if (authHeader == null) {
-            showNotification("Please sign in again to load your appointments.", false)
-            updateAppointmentBuckets(ArrayList())
-            return
-        }
-        apiService.getUserAppointments(authHeader).enqueue(object : RetrofitCallback<List<Appointment>> {
-            override fun onResponse(call: Call<List<Appointment>>, response: Response<List<Appointment>>) {
-                val body = response.body()
-                if (!response.isSuccessful || body == null) {
-                    Log.e(TAG, "Failed to load appointments. Code: ${response.code()}")
-                    showNotification("We couldn't load your appointments right now.", false)
-                    updateAppointmentBuckets(ArrayList())
-                    return
-                }
-                updateAppointmentBuckets(ArrayList(body))
-                syncReviewStates()
-            }
-            override fun onFailure(call: Call<List<Appointment>>, t: Throwable) {
-                Log.e(TAG, "Failed to load appointments", t)
-                showNotification("We couldn't reach the server for your appointments.", false)
-                updateAppointmentBuckets(ArrayList())
-            }
-        })
     }
 
     private fun setupListeners() {
@@ -208,22 +168,11 @@ class MyAppointmentsActivity : AppCompatActivity(), AppointmentAdapter.OnAppoint
         else -> upcomingAppointments
     }
 
-    private fun updateAppointmentBuckets(appointments: List<Appointment>) {
-        allAppointments = ArrayList(appointments)
-        upcomingAppointments = ArrayList()
-        pastAppointments = ArrayList()
-        cancelledAppointments = ArrayList()
-        for (appointment in allAppointments) {
-            val status = normalizeStatus(appointment.status)
-            when {
-                isCancelledStatus(status) -> cancelledAppointments.add(appointment)
-                isPastStatus(status) -> pastAppointments.add(appointment)
-                else -> upcomingAppointments.add(appointment)
-            }
-        }
-        sortAppointments(upcomingAppointments, true)
-        sortAppointments(pastAppointments, false)
-        sortAppointments(cancelledAppointments, false)
+    override fun renderAppointments(upcoming: List<Appointment>, past: List<Appointment>, cancelled: List<Appointment>) {
+        allAppointments = ArrayList(upcoming + past + cancelled)
+        upcomingAppointments = ArrayList(upcoming)
+        pastAppointments = ArrayList(past)
+        cancelledAppointments = ArrayList(cancelled)
         refreshCounts()
         selectTab(currentTab)
     }
@@ -244,108 +193,21 @@ class MyAppointmentsActivity : AppCompatActivity(), AppointmentAdapter.OnAppoint
         }
     }
 
-    private fun syncReviewStates() {
-        val authHeader = tokenManager.getAuthorizationHeader() ?: return
-        for (appointment in pastAppointments) {
-            val id = appointment.id ?: continue
-            if (id.isBlank()) continue
-            apiService.checkAppointmentReviewed(authHeader, id).enqueue(object : RetrofitCallback<Map<String, Boolean>> {
-                override fun onResponse(call: Call<Map<String, Boolean>>, response: Response<Map<String, Boolean>>) {
-                    val body = response.body() ?: return
-                    if (!response.isSuccessful) return
-                    appointment.setReviewed(body["reviewed"] == true)
-                    if (currentTab == "past") appointmentAdapter.notifyDataSetChanged()
-                }
-                override fun onFailure(call: Call<Map<String, Boolean>>, t: Throwable) {
-                    Log.w(TAG, "Failed to check review status for appointment ${appointment.id}", t)
-                }
-            })
-        }
-    }
-
-    private fun normalizeStatus(status: String?): String = status?.trim()?.lowercase(Locale.US) ?: ""
-    private fun isCancelledStatus(status: String) = status.contains("cancel") || status.contains("reject") || status.contains("declin")
-    private fun isPastStatus(status: String) = status.contains("done") || status.contains("complete")
-
-    private fun applyAppointmentUpdate(updated: Appointment?) {
-        updated ?: return
-        var replaced = false
-        for (i in allAppointments.indices) {
-            if (safe(allAppointments[i].id) == safe(updated.id)) {
-                allAppointments[i] = updated
-                replaced = true
-                break
-            }
-        }
-        if (!replaced) allAppointments.add(updated)
-        updateAppointmentBuckets(allAppointments)
-    }
-
     private fun submitCancellation(appointment: Appointment, reason: String, dialog: AlertDialog) {
-        val authHeader = tokenManager.getAuthorizationHeader()
-        val id = appointment.id
-        if (authHeader == null || id == null) {
-            showNotification("Please sign in again to manage this appointment.", false)
-            return
-        }
-        apiService.updateAppointmentStatus(authHeader, id, hashMapOf("status" to "Cancelled", "cancellationReason" to reason))
-            .enqueue(object : RetrofitCallback<Appointment> {
-                override fun onResponse(call: Call<Appointment>, response: Response<Appointment>) {
-                    val body = response.body()
-                    if (!response.isSuccessful || body == null) {
-                        showNotification("We couldn't cancel this appointment right now.", false); return
-                    }
-                    applyAppointmentUpdate(body); dialog.dismiss(); selectTab("cancelled"); showNotification("Appointment cancelled successfully.", true)
-                }
-                override fun onFailure(call: Call<Appointment>, t: Throwable) {
-                    Log.e(TAG, "Failed to cancel appointment", t); showNotification("We couldn't cancel this appointment right now.", false)
-                }
-            })
+        presenter.cancelAppointment(appointment, reason)
+        dialog.dismiss()
+        selectTab("cancelled")
     }
 
     private fun submitReview(appointment: Appointment, rating: Int, feedback: String, dialog: AlertDialog) {
-        val authHeader = tokenManager.getAuthorizationHeader()
-        val id = appointment.id
-        if (authHeader == null || id == null) {
-            showNotification("Please sign in again to submit your review.", false); return
-        }
-        val review = Review().apply {
-            appointmentId = id
-            specialistName = appointment.specialistName
-            serviceName = appointment.serviceName
-            this.rating = rating
-            reviewText = feedback
-            patientName = this@MyAppointmentsActivity.patientName
-            patientEmail = this@MyAppointmentsActivity.patientEmail
-        }
-        apiService.submitReview(authHeader, review).enqueue(object : RetrofitCallback<Map<String, String>> {
-            override fun onResponse(call: Call<Map<String, String>>, response: Response<Map<String, String>>) {
-                if (!response.isSuccessful) { showNotification("We couldn't submit your review right now.", false); return }
-                appointment.setReviewed(true); appointmentAdapter.notifyDataSetChanged(); dialog.dismiss(); showNotification("Thank you for your review.", true)
-            }
-            override fun onFailure(call: Call<Map<String, String>>, t: Throwable) {
-                Log.e(TAG, "Failed to submit review", t); showNotification("We couldn't submit your review right now.", false)
-            }
-        })
+        presenter.submitReview(appointment, rating, feedback)
+        dialog.dismiss()
     }
 
     private fun submitReschedule(appointment: Appointment, newDate: String, newTimeSlot: String, reason: String, dialog: AlertDialog) {
-        val authHeader = tokenManager.getAuthorizationHeader()
-        val id = appointment.id
-        if (authHeader == null || id == null) {
-            showNotification("Please sign in again to reschedule this appointment.", false); return
-        }
-        apiService.updateAppointment(authHeader, id, hashMapOf("appointmentDate" to newDate, "timeSlot" to newTimeSlot, "rescheduleReason" to reason, "status" to "Rescheduled"))
-            .enqueue(object : RetrofitCallback<Appointment> {
-                override fun onResponse(call: Call<Appointment>, response: Response<Appointment>) {
-                    val body = response.body()
-                    if (!response.isSuccessful || body == null) { showNotification("We couldn't reschedule this appointment right now.", false); return }
-                    applyAppointmentUpdate(body); dialog.dismiss(); selectTab("upcoming"); showNotification("Appointment rescheduled successfully.", true)
-                }
-                override fun onFailure(call: Call<Appointment>, t: Throwable) {
-                    Log.e(TAG, "Failed to reschedule appointment", t); showNotification("We couldn't reschedule this appointment right now.", false)
-                }
-            })
+        presenter.rescheduleAppointment(appointment, newDate, newTimeSlot, reason)
+        dialog.dismiss()
+        selectTab("upcoming")
     }
 
     private fun updateEmptyState(empty: Boolean) {
@@ -401,7 +263,7 @@ class MyAppointmentsActivity : AppCompatActivity(), AppointmentAdapter.OnAppoint
         view.findViewById<TextView>(R.id.detailDateValue).text = appointment.appointmentDate
         view.findViewById<TextView>(R.id.detailTimeValue).text = appointment.timeSlot
         view.findViewById<TextView>(R.id.detailStatusValue).text = appointment.status
-        view.findViewById<TextView>(R.id.detailPatientValue).text = safe(appointment.patientName, patientName)
+        view.findViewById<TextView>(R.id.detailPatientValue).text = safe(appointment.patientName, "Patient")
         view.findViewById<TextView>(R.id.detailReasonValue).text = safe(appointment.reason, "No reason provided.")
         val rescheduleBox = view.findViewById<LinearLayout>(R.id.detailRescheduleBox)
         val cancellationBox = view.findViewById<LinearLayout>(R.id.detailCancellationBox)
@@ -720,7 +582,7 @@ class MyAppointmentsActivity : AppCompatActivity(), AppointmentAdapter.OnAppoint
         }
     }
 
-    private fun showNotification(message: String, success: Boolean) {
+    override fun showNotification(message: String, success: Boolean) {
         notificationBanner.setBackgroundResource(
             if (success) R.drawable.my_appts_notification_success else R.drawable.my_appts_notification_error
         )

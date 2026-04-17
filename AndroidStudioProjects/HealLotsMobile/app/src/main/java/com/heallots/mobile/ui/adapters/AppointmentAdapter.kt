@@ -1,4 +1,4 @@
-package com.heallots.mobile.ui.adapters
+package com.heallots.mobile.features.appointments.list
 
 import android.content.Context
 import android.graphics.Color

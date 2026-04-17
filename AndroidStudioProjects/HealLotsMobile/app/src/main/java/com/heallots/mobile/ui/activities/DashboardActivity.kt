@@ -1,4 +1,4 @@
-package com.heallots.mobile.ui.activities
+package com.heallots.mobile.features.appointments.dashboard
 
 import android.content.Intent
 import android.graphics.Color
@@ -15,13 +15,16 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.heallots.mobile.R
 import com.heallots.mobile.api.ApiClient
-import com.heallots.mobile.api.ApiService
+import com.heallots.mobile.features.admin.dashboard.AdminDashboardActivity
+import com.heallots.mobile.features.appointments.book.BookAppointmentActivity
+import com.heallots.mobile.features.appointments.list.MyAppointmentsActivity
+import com.heallots.mobile.features.profile.ProfileActivity
 import com.heallots.mobile.models.Appointment
 import com.heallots.mobile.models.Review
 import com.heallots.mobile.models.User
 import com.heallots.mobile.storage.TokenManager
-import com.heallots.mobile.ui.adapters.DashboardAppointmentAdapter
-import com.heallots.mobile.ui.adapters.ReviewAdapter
+import com.heallots.mobile.features.appointments.dashboard.DashboardAppointmentAdapter
+import com.heallots.mobile.features.appointments.dashboard.ReviewAdapter
 import com.heallots.mobile.utils.Constants
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
@@ -31,13 +34,8 @@ import java.util.ArrayList
 import java.util.Date
 import java.util.LinkedHashMap
 import java.util.Locale
-import retrofit2.Call
-import retrofit2.Callback as RetrofitCallback
-import retrofit2.Response
 
-class DashboardActivity : AppCompatActivity() {
-    private lateinit var tokenManager: TokenManager
-    private lateinit var apiService: ApiService
+class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private lateinit var bookCard: LinearLayout
     private lateinit var appointmentsCard: LinearLayout
     private lateinit var userBadge: LinearLayout
@@ -62,19 +60,24 @@ class DashboardActivity : AppCompatActivity() {
     private val allReviews = ArrayList<Review>()
     private val filteredReviews = ArrayList<Review>()
     private var selectedReviewTab = "All"
+    private lateinit var presenter: DashboardContract.Presenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         try {
             setContentView(R.layout.activity_dashboard)
-            tokenManager = TokenManager(this)
-            apiService = ApiClient.getApiService()
+            presenter = DashboardPresenter(
+                view = this,
+                repository = DashboardRepository(
+                    apiService = ApiClient.getApiService(),
+                    tokenManager = TokenManager(this)
+                )
+            )
             initializeViews()
             setupRecyclerViews()
-            setUserInfo()
             setupListeners()
-            loadDashboardData()
+            presenter.loadDashboard()
         } catch (e: Exception) {
             Log.e(TAG, "Error in onCreate", e)
             finish()
@@ -83,10 +86,14 @@ class DashboardActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (::apiService.isInitialized) {
-            setUserInfo()
-            loadDashboardData()
+        if (::presenter.isInitialized) {
+            presenter.loadDashboard()
         }
+    }
+
+    override fun onDestroy() {
+        presenter.onDestroy()
+        super.onDestroy()
     }
 
     private fun initializeViews() {
@@ -127,8 +134,7 @@ class DashboardActivity : AppCompatActivity() {
         reviewsRecycler.adapter = reviewAdapter
     }
 
-    private fun setUserInfo() {
-        val currentUser: User? = tokenManager.getUser()
+    override fun renderUser(currentUser: User?) {
         val fullName = currentUser?.fullName?.takeUnless { it.isBlank() } ?: "User"
         val role = currentUser?.role?.takeUnless { it.isBlank() } ?: "USER"
         val firstName = getFirstName(fullName)
@@ -172,49 +178,7 @@ class DashboardActivity : AppCompatActivity() {
         adminBtn.setOnClickListener { startActivity(Intent(this, AdminDashboardActivity::class.java)) }
     }
 
-    private fun loadDashboardData() {
-        loadRecentAppointments()
-        loadReviews()
-    }
-
-    private fun loadRecentAppointments() {
-        val authHeader = tokenManager.getAuthorizationHeader()
-        if (authHeader == null) {
-            renderAppointments(ArrayList())
-            return
-        }
-
-        apiService.getUserAppointments(authHeader).enqueue(object : RetrofitCallback<List<Appointment>> {
-            override fun onResponse(call: Call<List<Appointment>>, response: Response<List<Appointment>>) {
-                val body = response.body()
-                if (!response.isSuccessful || body == null) {
-                    renderAppointments(ArrayList())
-                    return
-                }
-
-                val appointments = ArrayList(body)
-                appointments.sortBy { toTimestamp(it) }
-                val upcoming = ArrayList<Appointment>()
-                for (appointment in appointments) {
-                    val status = safeText(appointment.status, "").lowercase(Locale.US)
-                    if (!status.contains("cancel") && !status.contains("done") && !status.contains("complete")) {
-                        upcoming.add(appointment)
-                    }
-                    if (upcoming.size == 3) {
-                        break
-                    }
-                }
-                renderAppointments(upcoming)
-            }
-
-            override fun onFailure(call: Call<List<Appointment>>, t: Throwable) {
-                Log.e(TAG, "Failed to load dashboard appointments", t)
-                renderAppointments(ArrayList())
-            }
-        })
-    }
-
-    private fun renderAppointments(appointments: List<Appointment>) {
+    override fun renderAppointments(appointments: List<Appointment>) {
         recentAppointments.clear()
         recentAppointments.addAll(appointments)
         appointmentAdapter.updateAppointments(recentAppointments)
@@ -223,25 +187,7 @@ class DashboardActivity : AppCompatActivity() {
         appointmentsRecycler.visibility = if (empty) View.GONE else View.VISIBLE
     }
 
-    private fun loadReviews() {
-        apiService.getAllReviews().enqueue(object : RetrofitCallback<List<Review>> {
-            override fun onResponse(call: Call<List<Review>>, response: Response<List<Review>>) {
-                val body = response.body()
-                if (!response.isSuccessful || body == null) {
-                    renderReviews(ArrayList())
-                    return
-                }
-                renderReviews(ArrayList(body))
-            }
-
-            override fun onFailure(call: Call<List<Review>>, t: Throwable) {
-                Log.e(TAG, "Failed to load reviews", t)
-                renderReviews(ArrayList())
-            }
-        })
-    }
-
-    private fun renderReviews(reviews: List<Review>) {
+    override fun renderReviews(reviews: List<Review>) {
         allReviews.clear()
         allReviews.addAll(reviews.sortedByDescending { getReviewTimestamp(it) })
 
@@ -312,18 +258,6 @@ class DashboardActivity : AppCompatActivity() {
             total += review.rating.coerceAtLeast(0)
         }
         return total.toDouble() / reviews.size
-    }
-
-    private fun toTimestamp(appointment: Appointment): Long {
-        return try {
-            SimpleDateFormat("yyyy-MM-dd hh:mm a", Locale.US)
-                .parse("${safeText(appointment.appointmentDate, "")} ${safeText(appointment.timeSlot, "")}")
-                ?.time ?: Long.MAX_VALUE
-        } catch (_: ParseException) {
-            Long.MAX_VALUE
-        } catch (_: NullPointerException) {
-            Long.MAX_VALUE
-        }
     }
 
     private fun dp(value: Int): Int {

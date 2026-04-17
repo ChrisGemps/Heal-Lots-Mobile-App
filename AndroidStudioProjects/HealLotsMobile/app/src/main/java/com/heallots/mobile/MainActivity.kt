@@ -6,9 +6,9 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.heallots.mobile.features.appointments.dashboard.DashboardActivity
+import com.heallots.mobile.features.auth.login.LoginActivity
 import com.heallots.mobile.storage.TokenManager
-import com.heallots.mobile.ui.activities.DashboardActivity
-import com.heallots.mobile.ui.activities.LoginActivity
 
 class MainActivity : AppCompatActivity() {
     private lateinit var tokenManager: TokenManager

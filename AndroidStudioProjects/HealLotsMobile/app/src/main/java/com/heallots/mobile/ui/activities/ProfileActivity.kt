@@ -1,4 +1,4 @@
-package com.heallots.mobile.ui.activities
+package com.heallots.mobile.features.profile
 
 import android.content.Intent
 import android.content.SharedPreferences
@@ -27,35 +27,23 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.heallots.mobile.R
 import com.heallots.mobile.api.ApiClient
-import com.heallots.mobile.api.ApiService
+import com.heallots.mobile.features.auth.login.LoginActivity
 import com.heallots.mobile.models.User
-import com.heallots.mobile.storage.TokenManager
 import com.heallots.mobile.utils.Constants
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.HashMap
 import java.util.Locale
-import okhttp3.MediaType
-import okhttp3.MultipartBody
-import okhttp3.RequestBody
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import retrofit2.Call
-import retrofit2.Callback as RetrofitCallback
-import retrofit2.Response
 
-class ProfileActivity : AppCompatActivity() {
+class ProfileActivity : AppCompatActivity(), ProfileContract.View {
     private val photoPickerLauncher: ActivityResultLauncher<String> = registerForActivityResult(
         ActivityResultContracts.GetContent(),
         ::handleSelectedPhoto
     )
 
-    private lateinit var tokenManager: TokenManager
-    private lateinit var apiService: ApiService
+    private lateinit var presenter: ProfileContract.Presenter
     private var currentUser: User? = null
 
     private lateinit var backBtn: Button
@@ -103,13 +91,18 @@ class ProfileActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         try {
             setContentView(R.layout.activity_profile)
-            tokenManager = TokenManager(this)
-            apiService = ApiClient.getApiService()
-            currentUser = tokenManager.getUser()
+            presenter = ProfilePresenter(
+                view = this,
+                repository = ProfileRepository(
+                    context = this,
+                    apiService = ApiClient.getApiService(),
+                    tokenManager = com.heallots.mobile.storage.TokenManager(this)
+                )
+            )
 
             initializeViews()
             setupGenderSpinner()
-            bindUserInfo()
+            presenter.loadUser()
             setupListeners()
             setupPasswordListeners()
         } catch (e: Exception) {
@@ -120,8 +113,12 @@ class ProfileActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        currentUser = tokenManager.getUser()
-        bindUserInfo()
+        presenter.loadUser()
+    }
+
+    override fun onDestroy() {
+        presenter.onDestroy()
+        super.onDestroy()
     }
 
     private fun initializeViews() {
@@ -206,9 +203,14 @@ class ProfileActivity : AppCompatActivity() {
         loadProfilePhoto()
     }
 
+    override fun renderUser(user: User?) {
+        currentUser = user
+        bindUserInfo()
+    }
+
     private fun setupListeners() {
         backBtn.setOnClickListener { finish() }
-        signOutBtn.setOnClickListener { handleLogout() }
+        signOutBtn.setOnClickListener { presenter.logout() }
         editBtn.setOnClickListener { toggleEditMode() }
         saveBtn.setOnClickListener { saveProfileChanges() }
         changePhotoBtn.setOnClickListener { photoPickerLauncher.launch("image/*") }
@@ -261,23 +263,12 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun saveProfileChanges() {
-        val authHeader = tokenManager.getAuthorizationHeader()
-        if (authHeader == null) {
-            showError("Please sign in again to update your profile")
-            return
-        }
-
         val fullName = fullNameEdit.text.toString().trim()
         val email = emailEdit.text.toString().trim()
         val phone = normalizePhoneForApi(phoneEdit.text.toString().trim())
         val birthday = normalizeBirthdayForApi(birthdayEdit.text.toString().trim())
         val address = addressEdit.text.toString().trim()
         val gender = genderSpinner.selectedItem.toString()
-
-        if (fullName.isEmpty() || email.isEmpty()) {
-            showError("Full Name and Email are required")
-            return
-        }
 
         val requestUser = User().apply {
             this.fullName = fullName
@@ -288,29 +279,8 @@ class ProfileActivity : AppCompatActivity() {
             this.gender = gender
             profilePictureUrl = currentUser?.profilePictureUrl
         }
-
         saveBtn.isEnabled = false
-        apiService.updateProfile(authHeader, requestUser).enqueue(object : RetrofitCallback<User> {
-            override fun onResponse(call: Call<User>, response: Response<User>) {
-                saveBtn.isEnabled = true
-                val body = response.body()
-                if (!response.isSuccessful || body == null) {
-                    showError("Failed to save profile changes")
-                    return
-                }
-                currentUser = body
-                persistUser(body)
-                bindUserInfo()
-                if (isEditingProfile) toggleEditMode()
-                showSuccess("Profile updated successfully!")
-            }
-
-            override fun onFailure(call: Call<User>, t: Throwable) {
-                saveBtn.isEnabled = true
-                Log.e(TAG, "Failed to update profile", t)
-                showError("Failed to save profile changes")
-            }
-        })
+        presenter.saveProfile(requestUser)
     }
 
     private fun togglePasswordEdit() {
@@ -321,53 +291,11 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun updatePassword() {
-        val authHeader = tokenManager.getAuthorizationHeader()
-        if (authHeader == null) {
-            showError("Please sign in again to update your password")
-            return
-        }
-
         val currentPassword = currentPasswordEdit.text.toString()
         val newPassword = newPasswordEdit.text.toString()
         val confirmPassword = confirmPasswordEdit.text.toString()
-        when {
-            currentPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty() -> {
-                showError("All password fields are required")
-                return
-            }
-            newPassword.length < 8 -> {
-                showError("New password must be at least 8 characters")
-                return
-            }
-            newPassword != confirmPassword -> {
-                showError("Passwords do not match")
-                return
-            }
-        }
-
-        val request = HashMap<String, String>().apply {
-            put("currentPassword", currentPassword)
-            put("newPassword", newPassword)
-        }
-
         updatePasswordBtn.isEnabled = false
-        apiService.changePassword(authHeader, request).enqueue(object : RetrofitCallback<Map<String, String>> {
-            override fun onResponse(call: Call<Map<String, String>>, response: Response<Map<String, String>>) {
-                updatePasswordBtn.isEnabled = true
-                if (!response.isSuccessful) {
-                    showError("Failed to update password")
-                    return
-                }
-                showSuccess("Password updated successfully!")
-                cancelPasswordEdit()
-            }
-
-            override fun onFailure(call: Call<Map<String, String>>, t: Throwable) {
-                updatePasswordBtn.isEnabled = true
-                Log.e(TAG, "Failed to update password", t)
-                showError("Failed to update password")
-            }
-        })
+        presenter.updatePassword(currentPassword, newPassword, confirmPassword)
     }
 
     private fun cancelPasswordEdit() {
@@ -379,57 +307,7 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun handleSelectedPhoto(uri: Uri?) {
         if (uri == null) return
-        val authHeader = tokenManager.getAuthorizationHeader()
-        if (authHeader == null) {
-            showError("Please sign in again to upload a photo")
-            return
-        }
-
-        try {
-            val fileBytes = readBytes(uri)
-            if (fileBytes == null || fileBytes.isEmpty()) {
-                showError("Unable to read the selected image")
-                return
-            }
-
-            val mimeType = contentResolver.getType(uri)
-            val requestBody = RequestBody.create((mimeType ?: "image/*").toMediaTypeOrNull(), fileBytes)
-            val part = MultipartBody.Part.createFormData("file", "profile-image.jpg", requestBody)
-
-            apiService.uploadProfilePicture(authHeader, part).enqueue(object : RetrofitCallback<User> {
-                override fun onResponse(call: Call<User>, response: Response<User>) {
-                    val body = response.body()
-                    if (!response.isSuccessful || body == null) {
-                        showError("Failed to upload profile picture")
-                        return
-                    }
-                    currentUser = body
-                    persistUser(body)
-                    bindUserInfo()
-                    showSuccess("Profile picture updated!")
-                }
-
-                override fun onFailure(call: Call<User>, t: Throwable) {
-                    Log.e(TAG, "Failed to upload profile picture", t)
-                    showError("Failed to upload profile picture")
-                }
-            })
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to process photo", e)
-            showError("Failed to open selected image")
-        }
-    }
-
-    private fun readBytes(uri: Uri): ByteArray? {
-        val inputStream: InputStream = contentResolver.openInputStream(uri) ?: return null
-        val outputStream = ByteArrayOutputStream()
-        val buffer = ByteArray(8192)
-        var read: Int
-        while (inputStream.read(buffer).also { read = it } != -1) {
-            outputStream.write(buffer, 0, read)
-        }
-        inputStream.close()
-        return outputStream.toByteArray()
+        presenter.uploadPhoto(uri)
     }
 
     private fun loadProfilePhoto() {
@@ -458,29 +336,6 @@ class ProfileActivity : AppCompatActivity() {
                 photoError.text = "Unable to load profile photo"
             }
         })
-    }
-
-    private fun persistUser(user: User) {
-        tokenManager.saveUser(user)
-        getSharedPreferences("user_prefs", MODE_PRIVATE).edit()
-            .putString("fullName", safeText(user.fullName, "User"))
-            .putString("email", safeText(user.email, ""))
-            .putString("phone", safeText(user.getPhone(), ""))
-            .putString("birthday", safeText(user.birthday, ""))
-            .putString("gender", safeText(user.gender, ""))
-            .putString("address", safeText(user.address, ""))
-            .putString("profilePictureUrl", safeText(user.profilePictureUrl, ""))
-            .putString("role", safeText(user.role, "USER"))
-            .apply()
-    }
-
-    private fun handleLogout() {
-        tokenManager.logout()
-        getSharedPreferences("user_prefs", MODE_PRIVATE).edit().clear().apply()
-        val intent = Intent(this, LoginActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
     }
 
     private fun clearPasswordFields() {
@@ -604,8 +459,25 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun normalizePhoneForApi(displayPhone: String): String = safeText(displayPhone, "").replace(Regex("\\s+"), "")
 
-    private fun showSuccess(message: String) = showPopupMessage(message)
-    private fun showError(message: String) = showPopupMessage(message)
+    override fun showSuccess(message: String) {
+        saveBtn.isEnabled = true
+        updatePasswordBtn.isEnabled = true
+        if (isEditingProfile) toggleEditMode()
+        if (isEditingPassword) cancelPasswordEdit()
+        showPopupMessage(message)
+    }
+    override fun showError(message: String) {
+        saveBtn.isEnabled = true
+        updatePasswordBtn.isEnabled = true
+        showPopupMessage(message)
+    }
+
+    override fun navigateToLogin() {
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
+    }
 
     private fun showPopupMessage(message: String) {
         successBanner.visibility = View.GONE

@@ -36,38 +36,38 @@
 
         <!-- Authentication Activities -->
         <activity
-            android:name=".ui.activities.LoginActivity"
+            android:name=".features.auth.login.LoginActivity"
             android:exported="false"
             android:theme="@style/Theme.HealLots" />
 
         <activity
-            android:name=".ui.activities.RegisterActivity"
+            android:name=".features.auth.register.RegisterActivity"
             android:exported="false"
             android:theme="@style/Theme.HealLots" />
 
         <!-- Main Activities -->
         <activity
-            android:name=".ui.activities.DashboardActivity"
+            android:name=".features.appointments.dashboard.DashboardActivity"
             android:exported="false"
             android:theme="@style/Theme.HealLots" />
 
         <activity
-            android:name=".ui.activities.BookAppointmentActivity"
+            android:name=".features.appointments.book.BookAppointmentActivity"
             android:exported="false"
             android:theme="@style/Theme.HealLots" />
 
         <activity
-            android:name=".ui.activities.MyAppointmentsActivity"
+            android:name=".features.appointments.list.MyAppointmentsActivity"
             android:exported="false"
             android:theme="@style/Theme.HealLots" />
 
         <activity
-            android:name=".ui.activities.ProfileActivity"
+            android:name=".features.profile.ProfileActivity"
             android:exported="false"
             android:theme="@style/Theme.HealLots" />
 
         <activity
-            android:name=".ui.activities.AdminDashboardActivity"
+            android:name=".features.admin.dashboard.AdminDashboardActivity"
             android:exported="false"
             android:theme="@style/Theme.HealLots" />
 

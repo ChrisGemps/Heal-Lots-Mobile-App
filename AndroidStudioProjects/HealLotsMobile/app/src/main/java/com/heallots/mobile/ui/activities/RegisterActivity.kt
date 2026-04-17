@@ -1,4 +1,4 @@
-package com.heallots.mobile.ui.activities
+package com.heallots.mobile.features.auth.register
 
 import android.app.DatePickerDialog
 import android.content.Intent
@@ -21,18 +21,14 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.heallots.mobile.R
 import com.heallots.mobile.api.ApiClient
-import com.heallots.mobile.api.ApiService
-import com.heallots.mobile.models.LoginResponse
-import com.heallots.mobile.models.RegisterRequest
+import com.heallots.mobile.features.appointments.dashboard.DashboardActivity
+import com.heallots.mobile.features.auth.login.LoginActivity
 import com.heallots.mobile.storage.TokenManager
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
-class RegisterActivity : AppCompatActivity() {
+class RegisterActivity : AppCompatActivity(), RegisterContract.View {
     private lateinit var nameEditText: EditText
     private lateinit var emailEditText: EditText
     private lateinit var phoneEditText: EditText
@@ -55,16 +51,20 @@ class RegisterActivity : AppCompatActivity() {
     private var isFormatting = false
     private var selectedBirthday = ""
 
-    private lateinit var apiService: ApiService
-    private lateinit var tokenManager: TokenManager
+    private lateinit var presenter: RegisterContract.Presenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {
             setContentView(R.layout.activity_register)
 
-            apiService = ApiClient.getApiService()
-            tokenManager = TokenManager(this)
+            presenter = RegisterPresenter(
+                view = this,
+                repository = RegisterRepository(
+                    apiService = ApiClient.getApiService(),
+                    tokenManager = TokenManager(this)
+                )
+            )
 
             initializeViews()
             setupListeners()
@@ -93,13 +93,15 @@ class RegisterActivity : AppCompatActivity() {
         passwordStrengthText = findViewById(R.id.passwordStrengthText)
     }
 
+    override fun onDestroy() {
+        presenter.onDestroy()
+        super.onDestroy()
+    }
+
     private fun setupListeners() {
         registerButton.setOnClickListener { handleRegister() }
 
-        loginLink.setOnClickListener {
-            startActivity(Intent(this@RegisterActivity, LoginActivity::class.java))
-            finish()
-        }
+        loginLink.setOnClickListener { presenter.onLoginClicked() }
 
         passwordToggleButton.setOnClickListener { togglePasswordVisibility() }
         confirmPasswordToggleButton.setOnClickListener { toggleConfirmPasswordVisibility() }
@@ -268,12 +270,12 @@ class RegisterActivity : AppCompatActivity() {
         confirmPasswordEditText.setSelection(confirmPasswordEditText.text.length)
     }
 
-    private fun showError(message: String) {
+    override fun showError(message: String) {
         errorMessage.text = message
         errorBanner.visibility = View.VISIBLE
     }
 
-    private fun hideError() {
+    override fun hideError() {
         errorBanner.visibility = View.GONE
     }
 
@@ -286,118 +288,40 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun handleRegister() {
-        val name = nameEditText.text.toString().trim()
-        val email = emailEditText.text.toString().trim()
-        val phone = phoneEditText.text.toString().trim().replace(" ", "")
-        val birthday = selectedBirthday
-        val gender = genderSpinner.selectedItem.toString()
-        val address = addressEditText.text.toString().trim()
-        val password = passwordEditText.text.toString().trim()
-        val confirmPassword = confirmPasswordEditText.text.toString().trim()
-
-        if (!validateInputs(name, email, phone, birthday, gender, address, password, confirmPassword)) {
-            return
-        }
-
         hideKeyboard()
-        registerButton.isEnabled = false
-        registerButton.text = "Creating Account..."
-
-        val request = RegisterRequest(name, email, phone, birthday, gender, address, password)
-
-        apiService.register(request).enqueue(object : Callback<LoginResponse> {
-            override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
-                val registerResponse = response.body()
-                if (response.isSuccessful && registerResponse != null) {
-                    tokenManager.saveToken(registerResponse.token)
-                    tokenManager.saveUser(registerResponse.user)
-
-                    Log.d(TAG, "Registration successful")
-                    startActivity(Intent(this@RegisterActivity, DashboardActivity::class.java))
-                    finish()
-                } else {
-                    val errorMsg = if (response.code() == 409) "Email already registered" else "Registration failed"
-                    showError(errorMsg)
-                    Log.e(TAG, "Registration error: ${response.code()}")
-                    registerButton.isEnabled = true
-                    registerButton.text = "Create Account"
-                }
-            }
-
-            override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                showError("Error: ${t.message ?: "Unknown error"}")
-                Log.e(TAG, "Registration failed", t)
-                registerButton.isEnabled = true
-                registerButton.text = "Create Account"
-            }
-        })
+        presenter.onRegisterClicked(
+            RegisterForm(
+                name = nameEditText.text.toString(),
+                email = emailEditText.text.toString(),
+                phone = phoneEditText.text.toString(),
+                birthday = selectedBirthday,
+                gender = genderSpinner.selectedItem.toString(),
+                address = addressEditText.text.toString(),
+                password = passwordEditText.text.toString(),
+                confirmPassword = confirmPasswordEditText.text.toString()
+            )
+        )
     }
 
-    private fun validateInputs(
-        name: String,
-        email: String,
-        phone: String,
-        birthday: String,
-        gender: String,
-        address: String,
-        password: String,
-        confirmPassword: String
-    ): Boolean {
-        return when {
-            name.isEmpty() -> {
-                showError("Full name is required")
-                false
-            }
-            name.length < 2 -> {
-                showError("Name must be at least 2 characters")
-                false
-            }
-            email.isEmpty() -> {
-                showError("Email address is required")
-                false
-            }
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                showError("Invalid email format (e.g., maria@example.com)")
-                false
-            }
-            phone.isEmpty() || phone.length < 10 -> {
-                showError("Phone number must be at least 10 digits")
-                false
-            }
-            birthday.isEmpty() || birthday.length != 8 -> {
-                showError("Birthday must be complete (MM/DD/YYYY)")
-                false
-            }
-            gender == "Select Gender" -> {
-                showError("Please select a gender")
-                false
-            }
-            address.isEmpty() -> {
-                showError("Address is required")
-                false
-            }
-            address.length < 5 -> {
-                showError("Address must be at least 5 characters")
-                false
-            }
-            password.isEmpty() -> {
-                showError("Password is required")
-                false
-            }
-            password.length < 6 -> {
-                showError("Password must be at least 6 characters")
-                false
-            }
-            confirmPassword.isEmpty() -> {
-                showError("Please confirm your password")
-                false
-            }
-            password != confirmPassword -> {
-                showError("Passwords do not match")
-                false
-            }
-            else -> true
-        }
+    override fun showLoading() {
+        registerButton.isEnabled = false
+        registerButton.text = "Creating Account..."
+    }
+
+    override fun hideLoading() {
+        registerButton.isEnabled = true
+        registerButton.text = "Create Account"
+    }
+
+    override fun navigateToLogin() {
+        startActivity(Intent(this, LoginActivity::class.java))
+        finish()
+    }
+
+    override fun navigateToDashboard() {
+        Log.d(TAG, "Registration successful")
+        startActivity(Intent(this, DashboardActivity::class.java))
+        finish()
     }
 
     companion object {

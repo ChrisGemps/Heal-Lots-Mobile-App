@@ -1,4 +1,4 @@
-package com.heallots.mobile.ui.adapters
+package com.heallots.mobile.features.appointments.dashboard
 
 import android.content.Context
 import android.view.LayoutInflater

@@ -1,4 +1,4 @@
-package com.heallots.mobile.ui.activities
+package com.heallots.mobile.features.admin.dashboard
 
 import android.app.AlertDialog
 import android.content.Intent
@@ -18,25 +18,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.heallots.mobile.R
 import com.heallots.mobile.api.ApiClient
-import com.heallots.mobile.api.ApiService
+import com.heallots.mobile.features.profile.ProfileActivity
 import com.heallots.mobile.models.Appointment
 import com.heallots.mobile.models.User
-import com.heallots.mobile.storage.TokenManager
-import com.heallots.mobile.ui.adapters.AdminAppointmentAdapter
-import com.heallots.mobile.ui.adapters.AdminUserAdapter
 import com.heallots.mobile.utils.Constants
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
-import retrofit2.Call
-import retrofit2.Callback as RetrofitCallback
-import retrofit2.Response
 
-class AdminDashboardActivity : AppCompatActivity(), AdminAppointmentAdapter.OnAdminAppointmentActionListener {
-    private lateinit var tokenManager: TokenManager
-    private lateinit var apiService: ApiService
+class AdminDashboardActivity : AppCompatActivity(), AdminAppointmentAdapter.OnAdminAppointmentActionListener, AdminDashboardContract.View {
     private lateinit var overviewTab: Button
     private lateinit var appointmentsTab: Button
     private lateinit var usersTab: Button
@@ -55,13 +47,19 @@ class AdminDashboardActivity : AppCompatActivity(), AdminAppointmentAdapter.OnAd
     private val allAppointments = ArrayList<Appointment>()
     private val allUsers = ArrayList<User>()
     private var currentTab = "overview"
+    private lateinit var presenter: AdminDashboardContract.Presenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {
             setContentView(R.layout.activity_admin_dashboard)
-            tokenManager = TokenManager(this)
-            apiService = ApiClient.getApiService()
+            presenter = AdminDashboardPresenter(
+                view = this,
+                repository = AdminDashboardRepository(
+                    apiService = ApiClient.getApiService(),
+                    tokenManager = com.heallots.mobile.storage.TokenManager(this)
+                )
+            )
             overviewTab = findViewById(R.id.adminOverviewTab)
             appointmentsTab = findViewById(R.id.adminAppointmentsTab)
             usersTab = findViewById(R.id.adminUsersTab)
@@ -79,16 +77,20 @@ class AdminDashboardActivity : AppCompatActivity(), AdminAppointmentAdapter.OnAd
             appointmentAdapter = AdminAppointmentAdapter(this, allAppointments, this)
             userAdapter = AdminUserAdapter(this, allUsers)
             adminListRecyclerView.adapter = appointmentAdapter
-            displayUserInfo()
             setupListeners()
-            loadAdminData()
+            presenter.loadAdminData()
             selectTab("overview")
         } catch (e: Exception) {
             Log.e(TAG, "Error in onCreate", e); finish()
         }
     }
 
-    override fun onResume() { super.onResume(); displayUserInfo(); loadAdminData() }
+    override fun onResume() { super.onResume(); presenter.loadAdminData() }
+
+    override fun onDestroy() {
+        presenter.onDestroy()
+        super.onDestroy()
+    }
 
     private fun setupListeners() {
         overviewTab.setOnClickListener { selectTab("overview") }
@@ -97,8 +99,7 @@ class AdminDashboardActivity : AppCompatActivity(), AdminAppointmentAdapter.OnAd
         userBadge.setOnClickListener { startActivity(Intent(this, ProfileActivity::class.java)) }
     }
 
-    private fun displayUserInfo() {
-        val currentUser = tokenManager.getUser()
+    override fun renderAdminUser(currentUser: User?) {
         val fullName = currentUser?.fullName?.takeUnless { it.isBlank() } ?: "Admin"
         userNameText.text = fullName.substringBefore(" ")
         userAvatarText.text = fullName.substring(0, 1).uppercase(Locale.US)
@@ -115,31 +116,17 @@ class AdminDashboardActivity : AppCompatActivity(), AdminAppointmentAdapter.OnAd
         }
     }
 
-    private fun loadAdminData() { loadAppointments(); loadUsers() }
-
-    private fun loadAppointments() {
-        val authHeader = tokenManager.getAuthorizationHeader() ?: return
-        apiService.getAllAppointments(authHeader).enqueue(object : RetrofitCallback<List<Appointment>> {
-            override fun onResponse(call: Call<List<Appointment>>, response: Response<List<Appointment>>) {
-                val body = response.body() ?: return
-                if (!response.isSuccessful) return
-                allAppointments.clear(); allAppointments.addAll(body); allAppointments.sortBy { toTimestamp(it) }
-                appointmentAdapter.updateAppointments(allAppointments); updateStats()
-            }
-            override fun onFailure(call: Call<List<Appointment>>, t: Throwable) { Log.e(TAG, "Failed to load appointments", t) }
-        })
-    }
-
-    private fun loadUsers() {
-        val authHeader = tokenManager.getAuthorizationHeader() ?: return
-        apiService.getAllUsers(authHeader).enqueue(object : RetrofitCallback<List<User>> {
-            override fun onResponse(call: Call<List<User>>, response: Response<List<User>>) {
-                val body = response.body() ?: return
-                if (!response.isSuccessful) return
-                allUsers.clear(); allUsers.addAll(body); userAdapter.updateUsers(allUsers); updateStats()
-            }
-            override fun onFailure(call: Call<List<User>>, t: Throwable) { Log.e(TAG, "Failed to load users", t) }
-        })
+    override fun renderAdminData(appointments: List<Appointment>, users: List<User>) {
+        allAppointments.clear()
+        allAppointments.addAll(appointments)
+        allUsers.clear()
+        allUsers.addAll(users)
+        appointmentAdapter.updateAppointments(allAppointments)
+        userAdapter.updateUsers(allUsers)
+        updateStats()
+        if (currentTab != "overview") {
+            selectTab(currentTab)
+        }
     }
 
     private fun updateStats() {
@@ -168,23 +155,9 @@ class AdminDashboardActivity : AppCompatActivity(), AdminAppointmentAdapter.OnAd
     }
 
     override fun onViewDetails(appointment: Appointment) = showAppointmentDetailsDialog(appointment)
-    override fun onApprove(appointment: Appointment) = updateAppointmentStatus(appointment, "Approved")
-    override fun onCancel(appointment: Appointment) = updateAppointmentStatus(appointment, "Cancelled")
-    override fun onMarkDone(appointment: Appointment) = updateAppointmentStatus(appointment, "Done")
-
-    private fun updateAppointmentStatus(appointment: Appointment, status: String) {
-        val authHeader = tokenManager.getAuthorizationHeader() ?: return
-        val id = appointment.id ?: return
-        apiService.updateAppointmentStatus(authHeader, id, hashMapOf("status" to status)).enqueue(object : RetrofitCallback<Appointment> {
-            override fun onResponse(call: Call<Appointment>, response: Response<Appointment>) {
-                val updated = response.body() ?: return
-                if (!response.isSuccessful) return
-                for (i in allAppointments.indices) if (safe(allAppointments[i].id) == safe(updated.id)) { allAppointments[i] = updated; break }
-                appointmentAdapter.updateAppointments(allAppointments); updateStats(); if (currentTab != "appointments") selectTab(currentTab)
-            }
-            override fun onFailure(call: Call<Appointment>, t: Throwable) { Log.e(TAG, "Failed to update appointment status", t) }
-        })
-    }
+    override fun onApprove(appointment: Appointment) = presenter.updateAppointmentStatus(appointment, "Approved")
+    override fun onCancel(appointment: Appointment) = presenter.updateAppointmentStatus(appointment, "Cancelled")
+    override fun onMarkDone(appointment: Appointment) = presenter.updateAppointmentStatus(appointment, "Done")
 
     private fun showAppointmentDetailsDialog(appointment: Appointment) {
         val view = layoutInflater.inflate(R.layout.dialog_admin_appointment_details, null)
@@ -276,12 +249,8 @@ class AdminDashboardActivity : AppCompatActivity(), AdminAppointmentAdapter.OnAd
 
     private fun updateAdminRescheduleConfirmState(confirm: Button, day: Int, slot: String?) { val enabled = day > 0 && !slot.isNullOrEmpty(); styleAmberButton(confirm, "\u2713 Confirm Reschedule"); confirm.isEnabled = enabled; confirm.alpha = if (enabled) 1f else 0.5f }
     private fun submitAdminReschedule(appointment: Appointment, newDate: String, newTimeSlot: String, dialog: AlertDialog) {
-        val authHeader = tokenManager.getAuthorizationHeader() ?: return
-        val id = appointment.id ?: return
-        apiService.updateAppointment(authHeader, id, hashMapOf("appointmentDate" to newDate, "timeSlot" to newTimeSlot, "status" to "Approved")).enqueue(object : RetrofitCallback<Appointment> {
-            override fun onResponse(call: Call<Appointment>, response: Response<Appointment>) { val updated = response.body() ?: return; if (!response.isSuccessful) return; for (i in allAppointments.indices) if (safe(allAppointments[i].id) == safe(updated.id)) { allAppointments[i] = updated; break }; appointmentAdapter.updateAppointments(allAppointments); updateStats(); if (currentTab != "appointments") selectTab(currentTab); dialog.dismiss() }
-            override fun onFailure(call: Call<Appointment>, t: Throwable) { Log.e(TAG, "Failed to reschedule appointment", t) }
-        })
+        presenter.rescheduleAppointment(appointment, newDate, newTimeSlot)
+        dialog.dismiss()
     }
     private fun showStatusConfirmationDialog(title: String, message: String, confirmText: String, onConfirm: (() -> Unit)?) { AlertDialog.Builder(this).setTitle(title).setMessage(message).setNegativeButton("Cancel") { d, _ -> d.dismiss() }.setPositiveButton(confirmText) { d, _ -> d.dismiss(); onConfirm?.invoke() }.show() }
     private fun findLinkedUser(appointment: Appointment): User? = allUsers.firstOrNull { safe(it.email) == safe(appointment.patientEmail) || safe(it.fullName) == safe(appointment.patientName) }
